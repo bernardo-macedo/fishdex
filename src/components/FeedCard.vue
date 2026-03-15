@@ -24,8 +24,15 @@
 
     <!-- Photo -->
     <div v-if="catch_.photoUrl" class="aspect-video bg-ocean-50">
-      <img :src="catch_.photoUrl" :alt="catch_.name" class="w-full h-full object-cover" />
+      <img
+        :src="catch_.photoUrl"
+        :alt="catch_.name"
+        class="w-full h-full object-cover cursor-zoom-in"
+        @click="viewerOpen = true"
+      />
     </div>
+
+    <PhotoViewer :src="viewerOpen ? catch_.photoUrl : null" :alt="catch_.name" @close="viewerOpen = false" />
 
     <!-- Fish info -->
     <div class="px-4 pt-3 pb-2">
@@ -86,6 +93,7 @@ import { doc, getDoc, setDoc, deleteDoc, updateDoc, increment, serverTimestamp }
 import { db } from '../firebase'
 import { user } from '../composables/useAuth'
 import CommentsPanel from './CommentsPanel.vue'
+import PhotoViewer from './PhotoViewer.vue'
 
 const props = defineProps({
   catch_: { type: Object, required: true },
@@ -95,6 +103,7 @@ const liked = ref(false)
 const likesCount = ref(props.catch_.likesCount || 0)
 const likeLoading = ref(false)
 const showComments = ref(false)
+const viewerOpen = ref(false)
 
 onMounted(async () => {
   if (!user.value) return

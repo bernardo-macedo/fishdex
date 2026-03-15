@@ -23,12 +23,15 @@
           v-if="fish.photoUrl"
           :src="fish.photoUrl"
           :alt="fish.name"
-          class="w-full h-full object-cover"
+          class="w-full h-full object-cover cursor-zoom-in"
+          @click="viewerOpen = true"
         />
         <div v-else class="w-full h-full flex items-center justify-center text-8xl">
           🐟
         </div>
       </div>
+
+      <PhotoViewer :src="viewerOpen ? fish.photoUrl : null" :alt="fish.name" @close="viewerOpen = false" />
 
       <div class="p-6">
         <div class="flex items-start justify-between">
@@ -118,6 +121,7 @@ import { ref as storageRef, deleteObject } from 'firebase/storage'
 import { useRoute, useRouter } from 'vue-router'
 import { db, storage } from '../firebase'
 import { user } from '../composables/useAuth'
+import PhotoViewer from '../components/PhotoViewer.vue'
 
 const route = useRoute()
 const router = useRouter()
@@ -125,6 +129,7 @@ const fish = ref(null)
 const loading = ref(true)
 const deleting = ref(false)
 const toggling = ref(false)
+const viewerOpen = ref(false)
 
 onMounted(async () => {
   try {
