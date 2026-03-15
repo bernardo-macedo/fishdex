@@ -94,6 +94,8 @@ import { user as currentUser } from '../composables/useAuth'
 const props = defineProps({
   open: Boolean,
   catchId: String,
+  catchOwnerId: String,
+  catchName: String,
 })
 const emit = defineEmits(['close'])
 
@@ -142,6 +144,20 @@ async function postComment() {
     })
     await updateDoc(doc(db, 'feed', props.catchId), { commentsCount: increment(1) })
     newComment.value = ''
+    // Notify catch owner (skip own comments)
+    if (props.catchOwnerId && props.catchOwnerId !== currentUser.value.uid) {
+      addDoc(collection(db, `users/${props.catchOwnerId}/notifications`), {
+        type: 'comment',
+        fromUserId: currentUser.value.uid,
+        fromDisplayName: currentUser.value.displayName,
+        fromPhotoURL: currentUser.value.photoURL || '',
+        catchId: props.catchId,
+        catchName: props.catchName || '',
+        text: text.slice(0, 100),
+        read: false,
+        createdAt: serverTimestamp(),
+      })
+    }
   } finally {
     posting.value = false
   }

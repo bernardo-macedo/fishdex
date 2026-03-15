@@ -85,13 +85,15 @@
   <CommentsPanel
     :open="showComments"
     :catchId="catch_.id"
+    :catchOwnerId="catch_.userId"
+    :catchName="catch_.name"
     @close="showComments = false"
   />
 </template>
 
 <script setup>
 import { ref, onMounted } from 'vue'
-import { doc, getDoc, setDoc, deleteDoc, updateDoc, increment, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, setDoc, deleteDoc, updateDoc, increment, serverTimestamp, addDoc, collection } from 'firebase/firestore'
 import { db } from '../firebase'
 import { user } from '../composables/useAuth'
 import CommentsPanel from './CommentsPanel.vue'
@@ -135,6 +137,19 @@ async function toggleLike() {
       await updateDoc(feedRef, { likesCount: increment(1) })
       liked.value = true
       likesCount.value++
+      // Notify catch owner (skip own catches)
+      if (props.catch_.userId && props.catch_.userId !== user.value.uid) {
+        addDoc(collection(db, `users/${props.catch_.userId}/notifications`), {
+          type: 'like',
+          fromUserId: user.value.uid,
+          fromDisplayName: user.value.displayName,
+          fromPhotoURL: user.value.photoURL || '',
+          catchId: props.catch_.id,
+          catchName: props.catch_.name,
+          read: false,
+          createdAt: serverTimestamp(),
+        })
+      }
     }
   } finally {
     likeLoading.value = false
