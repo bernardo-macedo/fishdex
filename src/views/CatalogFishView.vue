@@ -74,6 +74,42 @@
         </div>
       </div>
 
+      <!-- Community stats -->
+      <div v-if="communityLoaded && (topBaits.length > 0 || topTechniques.length > 0)" class="mb-6">
+        <h2 class="text-xl font-bold text-slate-800 mb-3">
+          Community insights
+          <span class="text-sm font-normal text-slate-400 ml-1">({{ communityCount }} public {{ communityCount === 1 ? 'catch' : 'catches' }})</span>
+        </h2>
+        <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+          <div v-if="topBaits.length > 0" class="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">🪱 Top baits used by anglers</div>
+            <div class="space-y-2">
+              <div v-for="(item, i) in topBaits" :key="item.label" class="flex items-center gap-2">
+                <div class="w-4 text-xs font-bold text-slate-300 text-right flex-shrink-0">{{ i + 1 }}</div>
+                <div class="flex-1 text-sm text-slate-700">{{ item.label }}</div>
+                <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div class="h-full bg-ocean-400 rounded-full" :style="{ width: (item.count / topBaits[0].count * 100) + '%' }" />
+                </div>
+                <div class="text-xs text-slate-400 w-6 text-right">{{ item.count }}</div>
+              </div>
+            </div>
+          </div>
+          <div v-if="topTechniques.length > 0" class="bg-white rounded-2xl shadow-sm p-4 border border-slate-100">
+            <div class="text-xs font-semibold uppercase tracking-wide text-slate-400 mb-3">🎣 Top techniques used</div>
+            <div class="space-y-2">
+              <div v-for="(item, i) in topTechniques" :key="item.label" class="flex items-center gap-2">
+                <div class="w-4 text-xs font-bold text-slate-300 text-right flex-shrink-0">{{ i + 1 }}</div>
+                <div class="flex-1 text-sm text-slate-700">{{ item.label }}</div>
+                <div class="w-20 bg-slate-100 rounded-full h-2 overflow-hidden">
+                  <div class="h-full bg-ocean-500 rounded-full" :style="{ width: (item.count / topTechniques[0].count * 100) + '%' }" />
+                </div>
+                <div class="text-xs text-slate-400 w-6 text-right">{{ item.count }}</div>
+              </div>
+            </div>
+          </div>
+        </div>
+      </div>
+
       <!-- User's catches of this species -->
       <div v-if="userCatches.length > 0">
         <h2 class="text-xl font-bold text-slate-800 mb-3">Your catches ({{ userCatches.length }})</h2>
@@ -121,7 +157,8 @@
 
 <script setup>
 import { ref, computed, onMounted, onUnmounted } from 'vue'
-import { collection, onSnapshot } from 'firebase/firestore'
+import { collection, query, where, getDocs } from 'firebase/firestore'
+import { onSnapshot } from 'firebase/firestore'
 import { useRoute } from 'vue-router'
 import { db } from '../firebase'
 import { user } from '../composables/useAuth'
@@ -145,9 +182,11 @@ const InfoCard = {
 const route = useRoute()
 const fish = computed(() => getFishById(route.params.id))
 const allUserFish = ref([])
+const communityFeed = ref([])
+const communityLoaded = ref(false)
 let unsubscribe = null
 
-onMounted(() => {
+onMounted(async () => {
   if (!user.value) return
   unsubscribe = onSnapshot(
     collection(db, `users/${user.value.uid}/fish`),
@@ -155,11 +194,37 @@ onMounted(() => {
       allUserFish.value = snapshot.docs.map((doc) => ({ id: doc.id, ...doc.data() }))
     }
   )
+
+  // Load community catches for this catalog species (one-time fetch)
+  if (route.params.id) {
+    try {
+      const q = query(collection(db, 'feed'), where('catalogId', '==', route.params.id))
+      const snap = await getDocs(q)
+      communityFeed.value = snap.docs.map((d) => d.data())
+    } catch {}
+    communityLoaded.value = true
+  }
 })
 
 onUnmounted(() => {
   if (unsubscribe) unsubscribe()
 })
+
+function topN(items, key, n = 5) {
+  const counts = {}
+  for (const item of items) {
+    const v = (item[key] || '').trim()
+    if (v) counts[v] = (counts[v] || 0) + 1
+  }
+  return Object.entries(counts)
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, n)
+}
+
+const communityCount = computed(() => communityFeed.value.length)
+const topBaits = computed(() => topN(communityFeed.value, 'bait'))
+const topTechniques = computed(() => topN(communityFeed.value, 'technique'))
 
 const userCatches = computed(() => {
   if (!fish.value) return []

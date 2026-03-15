@@ -80,6 +80,14 @@
             <span>📅</span>
             <span>{{ formatDate(fish.date) }}</span>
           </div>
+          <div v-if="fish.bait" class="flex items-center gap-2 text-slate-600">
+            <span>🪱</span>
+            <span>{{ fish.bait }}</span>
+          </div>
+          <div v-if="fish.technique" class="flex items-center gap-2 text-slate-600">
+            <span>🎣</span>
+            <span>{{ fish.technique }}</span>
+          </div>
           <div v-if="fish.notes" class="mt-4">
             <div class="text-sm font-medium text-slate-500 mb-1">Notes</div>
             <p class="text-slate-700 bg-slate-50 rounded-xl p-3 text-sm">{{ fish.notes }}</p>

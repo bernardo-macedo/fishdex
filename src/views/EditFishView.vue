@@ -143,6 +143,40 @@
         />
       </div>
 
+      <!-- Bait + Technique row -->
+      <div class="grid grid-cols-2 gap-4">
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Bait / lure</label>
+          <input
+            v-model="form.bait"
+            type="text"
+            placeholder="e.g. Rapala, earthworm"
+            class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 placeholder-slate-400 focus:outline-none focus:ring-2 focus:ring-ocean-400 focus:border-transparent"
+          />
+        </div>
+        <div>
+          <label class="block text-sm font-medium text-slate-700 mb-1">Technique</label>
+          <div class="relative">
+            <select
+              v-model="form.technique"
+              class="w-full border border-slate-200 rounded-xl px-4 py-2.5 text-slate-800 bg-white focus:outline-none focus:ring-2 focus:ring-ocean-400 focus:border-transparent appearance-none pr-8"
+            >
+              <option value="">— Select —</option>
+              <option>Spinning</option>
+              <option>Fly fishing</option>
+              <option>Bottom fishing</option>
+              <option>Float fishing</option>
+              <option>Feeder fishing</option>
+              <option>Trolling</option>
+              <option>Jigging</option>
+              <option>Surface lure</option>
+              <option>Other</option>
+            </select>
+            <div class="pointer-events-none absolute right-3 top-1/2 -translate-y-1/2 text-slate-400">▾</div>
+          </div>
+        </div>
+      </div>
+
       <!-- Notes -->
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-1">Notes</label>
@@ -229,6 +263,8 @@ const form = ref({
   weight: null,
   location: '',
   date: '',
+  bait: '',
+  technique: '',
   notes: '',
   public: false,
 })
@@ -247,6 +283,8 @@ onMounted(async () => {
         weight: data.weight || null,
         location: data.location || '',
         date: data.date || '',
+        bait: data.bait || '',
+        technique: data.technique || '',
         notes: data.notes || '',
         public: data.public || false,
       }
@@ -305,6 +343,8 @@ async function handleSubmit() {
       weight: form.value.weight || null,
       location: form.value.location.trim(),
       date: form.value.date,
+      bait: form.value.bait.trim(),
+      technique: form.value.technique,
       notes: form.value.notes.trim(),
       photoUrl,
       public: form.value.public,

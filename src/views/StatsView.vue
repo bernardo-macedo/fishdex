@@ -104,6 +104,37 @@
         </div>
       </div>
 
+      <!-- Bait & technique breakdown -->
+      <div v-if="topBaits.length > 0 || topTechniques.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
+        <div v-if="topBaits.length > 0" class="bg-white rounded-2xl shadow-sm p-6">
+          <h2 class="text-lg font-bold text-slate-700 mb-4">🪱 Your top baits</h2>
+          <div class="space-y-2">
+            <div v-for="(row, i) in topBaits" :key="row.label" class="flex items-center gap-3">
+              <div class="w-5 text-xs font-bold text-slate-400 text-right flex-shrink-0">{{ i + 1 }}</div>
+              <div class="flex-1 text-sm text-slate-700">{{ row.label }}</div>
+              <div class="w-20 bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div class="h-full bg-ocean-400 rounded-full" :style="{ width: (row.count / topBaits[0].count * 100) + '%' }" />
+              </div>
+              <div class="w-5 text-xs font-semibold text-slate-500 text-right flex-shrink-0">{{ row.count }}</div>
+            </div>
+          </div>
+        </div>
+
+        <div v-if="topTechniques.length > 0" class="bg-white rounded-2xl shadow-sm p-6">
+          <h2 class="text-lg font-bold text-slate-700 mb-4">🎣 Your top techniques</h2>
+          <div class="space-y-2">
+            <div v-for="(row, i) in topTechniques" :key="row.label" class="flex items-center gap-3">
+              <div class="w-5 text-xs font-bold text-slate-400 text-right flex-shrink-0">{{ i + 1 }}</div>
+              <div class="flex-1 text-sm text-slate-700">{{ row.label }}</div>
+              <div class="w-20 bg-slate-100 rounded-full h-3 overflow-hidden">
+                <div class="h-full bg-ocean-500 rounded-full" :style="{ width: (row.count / topTechniques[0].count * 100) + '%' }" />
+              </div>
+              <div class="w-5 text-xs font-semibold text-slate-500 text-right flex-shrink-0">{{ row.count }}</div>
+            </div>
+          </div>
+        </div>
+      </div>
+
     </div>
   </div>
 </template>
@@ -195,4 +226,19 @@ const topSpecies = computed(() => {
     .sort((a, b) => b.count - a.count)
     .slice(0, 8)
 })
+
+function countField(field, n = 6) {
+  const counts = {}
+  for (const c of catches.value) {
+    const v = (c[field] || '').trim()
+    if (v) counts[v] = (counts[v] || 0) + 1
+  }
+  return Object.entries(counts)
+    .map(([label, count]) => ({ label, count }))
+    .sort((a, b) => b.count - a.count)
+    .slice(0, n)
+}
+
+const topBaits = computed(() => countField('bait'))
+const topTechniques = computed(() => countField('technique'))
 </script>

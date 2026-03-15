@@ -53,6 +53,8 @@
       <div class="flex flex-wrap gap-2 mt-2">
         <span v-if="catch_.length" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">📏 {{ catch_.length }} cm</span>
         <span v-if="catch_.weight" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">⚖️ {{ catch_.weight }} kg</span>
+        <span v-if="catch_.bait" class="text-xs bg-slate-100 text-slate-600 px-2 py-1 rounded-full">🪱 {{ catch_.bait }}</span>
+        <span v-if="catch_.technique" class="text-xs bg-ocean-50 text-ocean-700 px-2 py-1 rounded-full">🎣 {{ catch_.technique }}</span>
       </div>
 
       <p v-if="catch_.notes" class="text-sm text-slate-500 mt-2 line-clamp-2">{{ catch_.notes }}</p>
