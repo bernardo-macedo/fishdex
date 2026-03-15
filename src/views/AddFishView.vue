@@ -201,6 +201,7 @@ import { useRouter } from 'vue-router'
 import { db, storage } from '../firebase'
 import { user } from '../composables/useAuth'
 import { fishCatalog, getFishById } from '../data/fishCatalog'
+import { compressImage } from '../utils/compressImage'
 
 const router = useRouter()
 const photoInput = ref(null)
@@ -267,11 +268,12 @@ async function handleSubmit() {
     let photoUrl = ''
 
     if (photoFile.value) {
+      const compressed = await compressImage(photoFile.value)
       const fileRef = storageRef(
         storage,
         `users/${user.value.uid}/fish/${Date.now()}_${photoFile.value.name}`
       )
-      await uploadBytes(fileRef, photoFile.value)
+      await uploadBytes(fileRef, compressed)
       photoUrl = await getDownloadURL(fileRef)
     }
 
