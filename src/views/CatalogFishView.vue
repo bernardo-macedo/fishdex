@@ -9,16 +9,16 @@
     <div v-else>
       <!-- Hero image -->
       <div class="relative rounded-2xl overflow-hidden bg-ocean-100 mb-6 aspect-video shadow-lg">
+        <div class="absolute inset-0 flex items-center justify-center text-9xl pointer-events-none">
+          {{ fish.emoji }}
+        </div>
         <img
           v-if="fish.image"
           :src="fish.image"
           :alt="fish.name"
-          class="w-full h-full object-cover"
+          class="absolute inset-0 w-full h-full object-cover"
           @error="(e) => e.target.style.display = 'none'"
         />
-        <div class="absolute inset-0 flex items-center justify-center text-9xl pointer-events-none">
-          {{ fish.emoji }}
-        </div>
 
         <!-- Caught badge -->
         <div

@@ -52,17 +52,15 @@
         </div>
 
         <!-- Image -->
-        <div class="aspect-square bg-ocean-50 overflow-hidden">
+        <div class="aspect-square bg-ocean-50 overflow-hidden relative">
+          <div class="absolute inset-0 flex items-center justify-center text-5xl">{{ fish.emoji }}</div>
           <img
             v-if="fish.image"
             :src="fish.image"
             :alt="fish.name"
-            class="w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
+            class="absolute inset-0 w-full h-full object-cover group-hover:scale-105 transition-transform duration-200"
             @error="(e) => e.target.style.display = 'none'"
           />
-          <div class="w-full h-full flex items-center justify-center text-5xl">
-            {{ fish.emoji }}
-          </div>
         </div>
 
         <!-- Info -->
