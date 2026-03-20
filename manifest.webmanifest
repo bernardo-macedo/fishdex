@@ -1,0 +1,1 @@
+{"name":"Fishdex","short_name":"Fishdex","description":"Your personal fishing journal","start_url":"/fishdex/","display":"standalone","background_color":"#0f172a","theme_color":"#0284c7","lang":"en","scope":"/fishdex/","orientation":"portrait","icons":[{"src":"pwa-icon.svg","sizes":"any","type":"image/svg+xml","purpose":"any maskable"}]}
