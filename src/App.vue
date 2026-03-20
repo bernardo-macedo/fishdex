@@ -4,6 +4,7 @@
     <main :class="user ? 'pb-20 sm:pb-0' : ''">
       <router-view />
     </main>
+    <InstallBanner v-if="user" />
   </div>
   <div v-else class="min-h-screen flex items-center justify-center bg-ocean-900">
     <div class="text-white text-xl animate-pulse">🎣 Loading Fishdex...</div>
@@ -16,6 +17,7 @@ import { onAuthStateChanged } from 'firebase/auth'
 import { auth } from './firebase'
 import { user, authReady } from './composables/useAuth'
 import Navbar from './components/Navbar.vue'
+import InstallBanner from './components/InstallBanner.vue'
 
 let unsubscribe = null
 
