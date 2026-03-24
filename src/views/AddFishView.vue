@@ -218,6 +218,24 @@
         </button>
       </div>
 
+      <!-- Share to clubs -->
+      <div v-if="myClubs.length > 0" class="bg-slate-50 rounded-xl px-4 py-3 space-y-2">
+        <p class="text-sm font-medium text-slate-700">Share to clubs 🎏</p>
+        <label
+          v-for="club in myClubs"
+          :key="club.id"
+          class="flex items-center gap-3 cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            :value="club.id"
+            v-model="form.clubIds"
+            class="w-4 h-4 accent-ocean-600 cursor-pointer"
+          />
+          <span class="text-sm text-slate-700">{{ club.name }}</span>
+        </label>
+      </div>
+
       <!-- Submit -->
       <button
         type="submit"
@@ -231,9 +249,9 @@
 </template>
 
 <script setup>
-import { ref, computed } from 'vue'
+import { ref, computed, onMounted } from 'vue'
 import LocationPicker from '../components/LocationPicker.vue'
-import { collection, addDoc, setDoc, doc, serverTimestamp } from 'firebase/firestore'
+import { collection, addDoc, setDoc, doc, serverTimestamp, query, where, getDocs } from 'firebase/firestore'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useRouter } from 'vue-router'
 import { db, storage } from '../firebase'
@@ -248,6 +266,15 @@ const photoFile = ref(null)
 const saving = ref(false)
 const selectedCatalogId = ref('')
 const toast = ref({ show: false, message: '', type: 'success' })
+const myClubs = ref([])
+
+onMounted(async () => {
+  if (!user.value) return
+  const snap = await getDocs(
+    query(collection(db, 'clubs'), where('memberIds', 'array-contains', user.value.uid))
+  )
+  myClubs.value = snap.docs.map((d) => ({ id: d.id, ...d.data() }))
+})
 
 function showToast(message, type = 'success') {
   toast.value = { show: true, message, type }
@@ -277,6 +304,7 @@ const form = ref({
   technique: '',
   notes: '',
   public: false,
+  clubIds: [],
 })
 
 function onCatalogSelect() {
@@ -337,14 +365,23 @@ async function handleSubmit() {
 
     const docRef = await addDoc(collection(db, `users/${user.value.uid}/fish`), catchData)
 
+    const denormalized = {
+      ...catchData,
+      userId: user.value.uid,
+      userDisplayName: user.value.displayName,
+      userPhotoURL: user.value.photoURL || '',
+      likesCount: 0,
+      commentsCount: 0,
+    }
+
     if (form.value.public) {
-      await setDoc(doc(db, 'feed', docRef.id), {
-        ...catchData,
-        userId: user.value.uid,
-        userDisplayName: user.value.displayName,
-        userPhotoURL: user.value.photoURL || '',
-        likesCount: 0,
-        commentsCount: 0,
+      await setDoc(doc(db, 'feed', docRef.id), denormalized)
+    }
+
+    for (const clubId of form.value.clubIds) {
+      await setDoc(doc(db, `clubs/${clubId}/posts/${docRef.id}`), {
+        ...denormalized,
+        type: 'catch',
       })
     }
 

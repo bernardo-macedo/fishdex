@@ -96,6 +96,8 @@ const props = defineProps({
   catchId: String,
   catchOwnerId: String,
   catchName: String,
+  // override: full Firestore path to the post doc, e.g. 'clubs/abc/posts/xyz'
+  postPath: { type: String, default: null },
 })
 const emit = defineEmits(['close'])
 
@@ -106,14 +108,16 @@ const posting = ref(false)
 let unsubscribe = null
 
 watch(() => props.open, (val) => {
-  if (val && props.catchId) startListening()
+  if (val && (props.catchId || props.postPath)) startListening()
   else stopListening()
 })
+
+const basePath = () => props.postPath || `feed/${props.catchId}`
 
 function startListening() {
   loading.value = true
   const q = query(
-    collection(db, `feed/${props.catchId}/comments`),
+    collection(db, `${basePath()}/comments`),
     orderBy('createdAt', 'asc')
   )
   unsubscribe = onSnapshot(q, (snap) => {
@@ -135,17 +139,18 @@ async function postComment() {
   if (!text || posting.value) return
   posting.value = true
   try {
-    await addDoc(collection(db, `feed/${props.catchId}/comments`), {
+    const path = basePath()
+    await addDoc(collection(db, `${path}/comments`), {
       userId: currentUser.value.uid,
       userDisplayName: currentUser.value.displayName,
       userPhotoURL: currentUser.value.photoURL || '',
       text,
       createdAt: serverTimestamp(),
     })
-    await updateDoc(doc(db, 'feed', props.catchId), { commentsCount: increment(1) })
+    await updateDoc(doc(db, path), { commentsCount: increment(1) })
     newComment.value = ''
-    // Notify catch owner (skip own comments)
-    if (props.catchOwnerId && props.catchOwnerId !== currentUser.value.uid) {
+    // Notify catch owner only for public feed (no notification for club posts)
+    if (!props.postPath && props.catchOwnerId && props.catchOwnerId !== currentUser.value.uid) {
       addDoc(collection(db, `users/${props.catchOwnerId}/notifications`), {
         type: 'comment',
         fromUserId: currentUser.value.uid,
@@ -164,8 +169,9 @@ async function postComment() {
 }
 
 async function deleteComment(comment) {
-  await deleteDoc(doc(db, `feed/${props.catchId}/comments/${comment.id}`))
-  await updateDoc(doc(db, 'feed', props.catchId), { commentsCount: increment(-1) })
+  const path = basePath()
+  await deleteDoc(doc(db, `${path}/comments/${comment.id}`))
+  await updateDoc(doc(db, path), { commentsCount: increment(-1) })
 }
 
 function timeAgo(ts) {

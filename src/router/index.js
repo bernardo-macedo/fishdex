@@ -69,6 +69,24 @@ const routes = [
     component: () => import('../views/NotificationsView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/clubs/:id',
+    name: 'Club',
+    component: () => import('../views/ClubView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/clubs/:id/admin',
+    name: 'ClubAdmin',
+    component: () => import('../views/ClubAdminView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/join/:code',
+    name: 'JoinClub',
+    component: () => import('../views/JoinClubView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({
