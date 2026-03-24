@@ -15,13 +15,11 @@
           {{ catch_.userDisplayName }}
         </router-link>
         <div class="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
-          <a
+          <button
             v-if="catch_.coords?.lat"
-            :href="`https://www.openstreetmap.org/?mlat=${catch_.coords.lat}&mlon=${catch_.coords.lng}&zoom=13`"
-            target="_blank"
-            rel="noopener"
+            @click="showMap = true"
             class="text-ocean-500 hover:underline"
-          >📍 {{ catch_.location || 'View on map' }}</a>
+          >📍 {{ catch_.location || 'View on map' }}</button>
           <span v-else-if="catch_.location">📍 {{ catch_.location }}</span>
           <span v-if="(catch_.location || catch_.coords) && catch_.date"> · </span>
           <span v-if="catch_.date">{{ formatDate(catch_.date) }}</span>
@@ -96,6 +94,14 @@
     :catchName="catch_.name"
     @close="showComments = false"
   />
+
+  <MapModal
+    :show="showMap"
+    :coords="catch_.coords"
+    :title="catch_.name"
+    :subtitle="catch_.location"
+    @close="showMap = false"
+  />
 </template>
 
 <script setup>
@@ -105,6 +111,7 @@ import { db } from '../firebase'
 import { user } from '../composables/useAuth'
 import CommentsPanel from './CommentsPanel.vue'
 import PhotoViewer from './PhotoViewer.vue'
+import MapModal from './MapModal.vue'
 
 const props = defineProps({
   catch_: { type: Object, required: true },
@@ -115,6 +122,7 @@ const likesCount = ref(props.catch_.likesCount || 0)
 const likeLoading = ref(false)
 const showComments = ref(false)
 const viewerOpen = ref(false)
+const showMap = ref(false)
 
 onMounted(async () => {
   if (!user.value) return
