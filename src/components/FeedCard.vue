@@ -15,8 +15,15 @@
           {{ catch_.userDisplayName }}
         </router-link>
         <div class="flex items-center gap-1.5 text-xs text-slate-400 mt-0.5">
-          <span v-if="catch_.location">📍 {{ catch_.location }}</span>
-          <span v-if="catch_.location && catch_.date"> · </span>
+          <a
+            v-if="catch_.coords?.lat"
+            :href="`https://www.openstreetmap.org/?mlat=${catch_.coords.lat}&mlon=${catch_.coords.lng}&zoom=13`"
+            target="_blank"
+            rel="noopener"
+            class="text-ocean-500 hover:underline"
+          >📍 {{ catch_.location || 'View on map' }}</a>
+          <span v-else-if="catch_.location">📍 {{ catch_.location }}</span>
+          <span v-if="(catch_.location || catch_.coords) && catch_.date"> · </span>
           <span v-if="catch_.date">{{ formatDate(catch_.date) }}</span>
         </div>
       </div>

@@ -104,6 +104,12 @@
         </div>
       </div>
 
+      <!-- Catch map -->
+      <div v-if="catchesWithCoords.length > 0" class="bg-white rounded-2xl shadow-sm p-6">
+        <h2 class="text-lg font-bold text-slate-700 mb-4">📍 Catch map</h2>
+        <CatchMap :catches="catchesWithCoords" />
+      </div>
+
       <!-- Bait & technique breakdown -->
       <div v-if="topBaits.length > 0 || topTechniques.length > 0" class="grid grid-cols-1 sm:grid-cols-2 gap-6">
         <div v-if="topBaits.length > 0" class="bg-white rounded-2xl shadow-sm p-6">
@@ -144,6 +150,7 @@ import { ref, computed, onMounted, onUnmounted } from 'vue'
 import { collection, query, orderBy, onSnapshot } from 'firebase/firestore'
 import { db } from '../firebase'
 import { user } from '../composables/useAuth'
+import CatchMap from '../components/CatchMap.vue'
 
 const catches = ref([])
 const loading = ref(true)
@@ -241,4 +248,8 @@ function countField(field, n = 6) {
 
 const topBaits = computed(() => countField('bait'))
 const topTechniques = computed(() => countField('technique'))
+
+const catchesWithCoords = computed(() =>
+  catches.value.filter((c) => c.coords?.lat && c.coords?.lng)
+)
 </script>

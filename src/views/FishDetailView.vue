@@ -76,6 +76,7 @@
             <span>📍</span>
             <span>{{ fish.location }}</span>
           </div>
+          <CatchMap v-if="fish.coords?.lat" :catches="[fish]" class="mt-2" />
           <div v-if="fish.date" class="flex items-center gap-2 text-slate-600">
             <span>📅</span>
             <span>{{ formatDate(fish.date) }}</span>
@@ -130,6 +131,7 @@ import { useRoute, useRouter } from 'vue-router'
 import { db, storage } from '../firebase'
 import { user } from '../composables/useAuth'
 import PhotoViewer from '../components/PhotoViewer.vue'
+import CatchMap from '../components/CatchMap.vue'
 
 const route = useRoute()
 const router = useRouter()

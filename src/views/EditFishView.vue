@@ -133,6 +133,9 @@
         />
       </div>
 
+      <!-- Map pin -->
+      <LocationPicker v-model="form.coords" />
+
       <!-- Date -->
       <div>
         <label class="block text-sm font-medium text-slate-700 mb-1">Date caught</label>
@@ -221,6 +224,7 @@
 
 <script setup>
 import { ref, computed, onMounted } from 'vue'
+import LocationPicker from '../components/LocationPicker.vue'
 import { doc, getDoc, updateDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useRoute, useRouter } from 'vue-router'
@@ -262,6 +266,7 @@ const form = ref({
   length: null,
   weight: null,
   location: '',
+  coords: null,
   date: '',
   bait: '',
   technique: '',
@@ -286,6 +291,7 @@ onMounted(async () => {
         bait: data.bait || '',
         technique: data.technique || '',
         notes: data.notes || '',
+        coords: data.coords || null,
         public: data.public || false,
       }
       selectedCatalogId.value = data.catalogId || ''
@@ -342,6 +348,7 @@ async function handleSubmit() {
       length: form.value.length || null,
       weight: form.value.weight || null,
       location: form.value.location.trim(),
+      coords: form.value.coords || null,
       date: form.value.date,
       bait: form.value.bait.trim(),
       technique: form.value.technique,
