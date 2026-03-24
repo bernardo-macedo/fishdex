@@ -73,12 +73,25 @@
           </div>
         </div>
 
+        <!-- How to share hint -->
+        <div class="flex items-start gap-2.5 bg-ocean-50 border border-ocean-100 rounded-xl px-4 py-3 mb-5 text-sm text-ocean-700">
+          <span class="text-base leading-tight mt-0.5">💡</span>
+          <span>Share any catch to this club by opening it and toggling <strong>Share to club</strong>, or when logging a new catch.</span>
+        </div>
+
         <div v-if="postsLoading" class="flex justify-center py-16">
           <div class="text-3xl animate-bounce">🎣</div>
         </div>
-        <div v-else-if="posts.length === 0" class="text-center py-16">
+        <div v-else-if="posts.length === 0" class="text-center py-12">
           <div class="text-5xl mb-3">🌊</div>
-          <p class="text-slate-500 text-sm">No posts yet — log a catch and share it here!</p>
+          <p class="text-slate-700 font-semibold mb-1">No posts yet</p>
+          <p class="text-slate-400 text-sm mb-5">Log a catch and share it to this club, or edit an existing catch to share it here.</p>
+          <router-link
+            to="/add"
+            class="inline-block bg-ocean-600 hover:bg-ocean-700 text-white text-sm font-semibold px-5 py-2.5 rounded-xl transition-colors"
+          >
+            + Log a catch
+          </router-link>
         </div>
         <div v-else class="space-y-5">
           <ClubPostCard

@@ -21,9 +21,10 @@
             class="text-ocean-500 hover:underline"
           >📍 {{ post.location || 'View on map' }}</button>
           <span v-else-if="post.location">📍 {{ post.location }}</span>
-          <span v-if="(post.location || post.coords) && post.date"> · </span>
+          <span v-if="(post.location || post.coords) && (post.date || post.createdAt)"> · </span>
           <span v-if="post.date">{{ formatDate(post.date) }}</span>
-          <span v-if="post.type === 'message'" class="bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide">club message</span>
+          <span v-else-if="post.createdAt">{{ formatTimestamp(post.createdAt) }}</span>
+          <span v-if="post.type === 'message'" class="ml-1 bg-slate-100 text-slate-500 px-1.5 py-0.5 rounded text-[10px] font-medium uppercase tracking-wide">club message</span>
         </div>
       </div>
     </div>
@@ -167,5 +168,15 @@ async function toggleLike() {
 function formatDate(dateStr) {
   if (!dateStr) return ''
   return new Date(dateStr).toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
+}
+
+function formatTimestamp(ts) {
+  if (!ts) return ''
+  const date = ts.toDate ? ts.toDate() : new Date(ts)
+  const secs = Math.floor((Date.now() - date) / 1000)
+  if (secs < 60) return 'just now'
+  if (secs < 3600) return `${Math.floor(secs / 60)}m ago`
+  if (secs < 86400) return `${Math.floor(secs / 3600)}h ago`
+  return date.toLocaleDateString('en-GB', { day: 'numeric', month: 'short', year: 'numeric' })
 }
 </script>

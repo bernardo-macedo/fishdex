@@ -210,6 +210,24 @@
         </button>
       </div>
 
+      <!-- Share to clubs -->
+      <div v-if="myClubs.length > 0" class="bg-slate-50 rounded-xl px-4 py-3 space-y-2">
+        <p class="text-sm font-medium text-slate-700">Share to clubs 🎏</p>
+        <label
+          v-for="club in myClubs"
+          :key="club.id"
+          class="flex items-center gap-3 cursor-pointer"
+        >
+          <input
+            type="checkbox"
+            :value="club.id"
+            v-model="form.clubIds"
+            class="w-4 h-4 accent-ocean-600 cursor-pointer"
+          />
+          <span class="text-sm text-slate-700">{{ club.name }}</span>
+        </label>
+      </div>
+
       <!-- Submit -->
       <button
         type="submit"
@@ -225,7 +243,7 @@
 <script setup>
 import { ref, computed, onMounted } from 'vue'
 import LocationPicker from '../components/LocationPicker.vue'
-import { doc, getDoc, updateDoc, setDoc, deleteDoc, serverTimestamp } from 'firebase/firestore'
+import { doc, getDoc, updateDoc, setDoc, deleteDoc, serverTimestamp, collection, query, where, getDocs } from 'firebase/firestore'
 import { ref as storageRef, uploadBytes, getDownloadURL } from 'firebase/storage'
 import { useRoute, useRouter } from 'vue-router'
 import { db, storage } from '../firebase'
@@ -242,6 +260,8 @@ const saving = ref(false)
 const loading = ref(true)
 const selectedCatalogId = ref('')
 const originalPublic = ref(false)
+const myClubs = ref([])
+const originalClubIds = ref([])
 const toast = ref({ show: false, message: '', type: 'success' })
 
 function showToast(message, type = 'success') {
@@ -272,11 +292,13 @@ const form = ref({
   technique: '',
   notes: '',
   public: false,
+  clubIds: [],
 })
 
 onMounted(async () => {
   try {
-    const docRef = doc(db, `users/${user.value.uid}/fish/${route.params.id}`)
+    const catchId = route.params.id
+    const docRef = doc(db, `users/${user.value.uid}/fish/${catchId}`)
     const snap = await getDoc(docRef)
     if (snap.exists()) {
       const data = snap.data()
@@ -293,11 +315,26 @@ onMounted(async () => {
         notes: data.notes || '',
         coords: data.coords || null,
         public: data.public || false,
+        clubIds: [],
       }
       selectedCatalogId.value = data.catalogId || ''
       originalPublic.value = data.public || false
       if (data.photoUrl) photoPreview.value = data.photoUrl
     }
+
+    // Load user's clubs and check which ones this catch is already shared to
+    const clubsSnap = await getDocs(
+      query(collection(db, 'clubs'), where('memberIds', 'array-contains', user.value.uid))
+    )
+    myClubs.value = clubsSnap.docs.map((d) => ({ id: d.id, ...d.data() }))
+
+    const sharedIn = []
+    for (const club of myClubs.value) {
+      const postSnap = await getDoc(doc(db, `clubs/${club.id}/posts/${catchId}`))
+      if (postSnap.exists()) sharedIn.push(club.id)
+    }
+    form.value.clubIds = sharedIn
+    originalClubIds.value = [...sharedIn]
   } finally {
     loading.value = false
   }
@@ -360,18 +397,35 @@ async function handleSubmit() {
     const privateRef = doc(db, `users/${user.value.uid}/fish/${route.params.id}`)
     await updateDoc(privateRef, catchData)
 
+    const denormalized = {
+      ...catchData,
+      userId: user.value.uid,
+      userDisplayName: user.value.displayName,
+      userPhotoURL: user.value.photoURL || '',
+      likesCount: 0,
+      commentsCount: 0,
+    }
+
     const feedRef = doc(db, 'feed', route.params.id)
     if (form.value.public) {
-      await setDoc(feedRef, {
-        ...catchData,
-        userId: user.value.uid,
-        userDisplayName: user.value.displayName,
-        userPhotoURL: user.value.photoURL || '',
-        likesCount: 0,
-        commentsCount: 0,
-      }, { merge: true })
+      await setDoc(feedRef, denormalized, { merge: true })
     } else if (originalPublic.value && !form.value.public) {
       try { await deleteDoc(feedRef) } catch {}
+    }
+
+    // Sync club sharing
+    for (const club of myClubs.value) {
+      const postRef = doc(db, `clubs/${club.id}/posts/${route.params.id}`)
+      const wasShared = originalClubIds.value.includes(club.id)
+      const isShared = form.value.clubIds.includes(club.id)
+      if (isShared && !wasShared) {
+        await setDoc(postRef, { ...denormalized, type: 'catch', createdAt: serverTimestamp() })
+      } else if (!isShared && wasShared) {
+        try { await deleteDoc(postRef) } catch {}
+      } else if (isShared && wasShared) {
+        const { likesCount, commentsCount, ...updateData } = denormalized
+        await setDoc(postRef, { ...updateData, type: 'catch' }, { merge: true })
+      }
     }
 
     showToast('Changes saved!')
