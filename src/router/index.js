@@ -87,6 +87,30 @@ const routes = [
     component: () => import('../views/JoinClubView.vue'),
     meta: { requiresAuth: true },
   },
+  {
+    path: '/competitions/:id',
+    name: 'Competition',
+    component: () => import('../views/CompetitionView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/competitions/:id/admin',
+    name: 'CompetitionAdmin',
+    component: () => import('../views/CompetitionAdminView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/competitions/:id/submit',
+    name: 'SubmitCatch',
+    component: () => import('../views/SubmitCatchView.vue'),
+    meta: { requiresAuth: true },
+  },
+  {
+    path: '/join-comp/:code',
+    name: 'JoinCompetition',
+    component: () => import('../views/JoinCompetitionView.vue'),
+    meta: { requiresAuth: true },
+  },
 ]
 
 const router = createRouter({
